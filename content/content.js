@@ -50,7 +50,7 @@ class ContentScriptManager {
      */
     setupMessageListener() {
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            console.log('📨 收到消息:', message);
+            // 移除冗余的消息日志
             
             switch (message.action) {
                 case 'startScan':
@@ -74,24 +74,15 @@ class ContentScriptManager {
                     break;
                     
                 default:
-                    console.warn('⚠️ 未知消息类型:', message.action);
                     sendResponse({ success: false, error: 'Unknown action' });
             }
             
-            // 返回true表示异步响应
             return true;
         });
     }
 
-    /**
-     * 处理开始扫描消息
-     * @param {Object} message - 消息对象
-     * @param {Function} sendResponse - 响应函数
-     */
     async handleStartScan(message, sendResponse) {
         try {
-            console.log('🔍 开始扫描页面');
-            
             // 执行检测
             const results = await this.detector.detectKeywords();
             this.currentResults = results;
@@ -110,7 +101,11 @@ class ContentScriptManager {
                 timestamp: new Date().toISOString()
             };
             
-            console.log('✅ 扫描完成:', response.statistics);
+            // 只在有问题时输出简洁的统计信息
+            if (results.length > 0) {
+                console.log(`🚨 发现 ${results.length} 个问题`);
+            }
+            
             sendResponse(response);
             
         } catch (error) {
@@ -123,15 +118,9 @@ class ContentScriptManager {
         }
     }
 
-    /**
-     * 处理设置关键词消息
-     * @param {Object} message - 消息对象
-     * @param {Function} sendResponse - 响应函数
-     */
     async handleSetKeywords(message, sendResponse) {
         try {
             const keywords = message.keywords || [];
-            console.log('📝 设置关键词:', keywords);
             
             // 设置检测器关键词
             this.detector.setKeywords(keywords);
@@ -139,9 +128,10 @@ class ContentScriptManager {
             // 保存到存储
             await this.saveKeywordsToStorage(keywords);
             
-            sendResponse({
-                success: true,
-                keywords: keywords
+            sendResponse({ 
+                success: true, 
+                keywords: keywords,
+                count: keywords.length
             });
             
         } catch (error) {
@@ -153,28 +143,21 @@ class ContentScriptManager {
         }
     }
 
-    /**
-     * 处理切换标注消息
-     * @param {Object} message - 消息对象
-     * @param {Function} sendResponse - 响应函数
-     */
     handleToggleAnnotation(message, sendResponse) {
         try {
-            const enabled = message.enabled !== false;
-            console.log('🎨 切换标注状态:', enabled);
+            const enabled = message.enabled;
             
-            this.annotator.toggle(enabled);
-            
-            // 如果启用标注且有结果，重新标注
-            if (enabled && this.currentResults.length > 0) {
-                this.annotator.annotateResults(this.currentResults);
+            if (enabled) {
+                this.annotator.enable();
+                // 重新标注当前结果
+                if (this.currentResults.length > 0) {
+                    this.annotator.annotateResults(this.currentResults);
+                }
+            } else {
+                this.annotator.disable();
             }
             
-            sendResponse({
-                success: true,
-                enabled: enabled,
-                statistics: this.annotator.getStatistics()
-            });
+            sendResponse({ success: true, enabled: enabled });
             
         } catch (error) {
             console.error('❌ 切换标注失败:', error);

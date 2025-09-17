@@ -14,21 +14,15 @@ class KeywordDetector {
      */
     setKeywords(keywords) {
         this.keywords = keywords.filter(keyword => keyword.trim().length > 0);
-        console.log('🔍 设置检测关键词:', this.keywords);
+        // 移除设置关键词的日志
     }
 
-    /**
-     * 开始检测当前页面
-     * @returns {Promise<Array>} 检测结果
-     */
     async detectKeywords() {
         if (this.isDetecting) {
-            console.log('⚠️ 检测正在进行中...');
             return this.detectionResults;
         }
 
         if (this.keywords.length === 0) {
-            console.log('⚠️ 未设置检测关键词');
             return [];
         }
 
@@ -36,8 +30,6 @@ class KeywordDetector {
         this.detectionResults = [];
 
         try {
-            console.log('🚀 开始关键词检测...');
-            
             // 检测页面文本内容
             await this.detectInTextContent();
             
@@ -50,18 +42,36 @@ class KeywordDetector {
             // 检测表单元素
             await this.detectInForms();
             
-            console.log(`✅ 检测完成，发现 ${this.detectionResults.length} 个问题`);
-            
-            // 输出详细结果到控制台
+            // 只输出简洁的检测结果
             this.logDetectionResults();
             
             return this.detectionResults;
         } catch (error) {
-            console.error('❌ 检测过程中发生错误:', error);
+            console.error('❌ 检测失败:', error);
             return [];
         } finally {
             this.isDetecting = false;
         }
+    }
+
+    /**
+     * 输出检测结果到控制台（简化版）
+     */
+    logDetectionResults() {
+        if (this.detectionResults.length === 0) {
+            return; // 不输出"未发现违规关键词"的消息
+        }
+
+        // 只输出问题列表，不使用console.group
+        console.log('🚨 检测到的问题:');
+        
+        this.detectionResults.forEach((result, index) => {
+            console.log(`${index + 1}. 关键词"${result.keyword}" - ${this.getTypeDisplayName(result.type)}: ${result.content.substring(0, 50)}${result.content.length > 50 ? '...' : ''}`);
+        });
+        
+        // 输出简洁的统计信息
+        const uniqueKeywords = new Set(this.detectionResults.map(r => r.keyword)).size;
+        console.log(`📊 总计: ${this.detectionResults.length} 个问题，${uniqueKeywords} 个关键词`);
     }
 
     /**

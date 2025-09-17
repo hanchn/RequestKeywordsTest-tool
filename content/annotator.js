@@ -15,7 +15,72 @@ class PageAnnotator {
      */
     init() {
         this.createStyleSheet();
-        console.log('🎨 页面标注器已初始化');
+        // 移除初始化日志
+    }
+
+    annotateResults(results) {
+        if (!this.isEnabled) {
+            return;
+        }
+
+        // 清除现有标注
+        this.clearAnnotations();
+
+        if (results.length === 0) {
+            return; // 不输出"无需标注的内容"消息
+        }
+
+        results.forEach((result, index) => {
+            this.annotateElement(result, index + 1);
+        });
+
+        // 只在有标注时输出简洁信息
+        if (this.annotations.size > 0) {
+            console.log(`🎨 已标注 ${this.annotations.size} 个元素`);
+        }
+    }
+
+    clearAnnotations() {
+        this.annotations.forEach((annotation) => {
+            const { element, tooltip, badge } = annotation;
+            
+            // 移除样式类
+            element.classList.remove(
+                'keyword-annotation', 
+                'keyword-annotation-warning', 
+                'keyword-annotation-info',
+                'keyword-highlight'
+            );
+            
+            // 移除提示框和徽章
+            if (tooltip && tooltip.parentNode) {
+                tooltip.remove();
+            }
+            if (badge && badge.parentNode) {
+                badge.remove();
+            }
+            
+            // 移除事件监听器
+            if (element._keywordClickHandler) {
+                element.removeEventListener('click', element._keywordClickHandler);
+                delete element._keywordClickHandler;
+            }
+        });
+        
+        this.annotations.clear();
+        this.annotationCounter = 0;
+        // 移除清除标注的日志
+    }
+
+    enable() {
+        this.isEnabled = true;
+        // 移除启用日志
+    }
+
+    disable() {
+        this.isEnabled = false;
+        this.clearAnnotations();
+        // 移除禁用日志
     }
 
     /**
