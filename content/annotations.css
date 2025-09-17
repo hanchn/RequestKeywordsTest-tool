@@ -1,0 +1,198 @@
+/* 关键词检测标注样式 */
+
+/* 基础标注样式 */
+.keyword-annotation {
+  position: relative !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 2px solid #ef4444 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+  animation: keyword-pulse 2s infinite !important;
+  transition: all 0.3s ease !important;
+}
+
+/* 不同类型的标注样式 */
+.keyword-annotation-warning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+}
+
+.keyword-annotation-info {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* 高亮状态 */
+.keyword-highlight {
+  background: rgba(255, 255, 0, 0.3) !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.4) !important;
+  animation: keyword-highlight-pulse 1s ease-in-out 3 !important;
+}
+
+/* 动画效果 */
+@keyframes keyword-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.4) !important;
+  }
+}
+
+@keyframes keyword-highlight-pulse {
+  0%,
+  100% {
+    transform: scale(1) !important;
+  }
+  50% {
+    transform: scale(1.02) !important;
+  }
+}
+
+/* 提示框样式 */
+.keyword-tooltip {
+  position: absolute !important;
+  top: -50px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: #1f2937 !important;
+  color: white !important;
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  z-index: 10000 !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease, transform 0.3s ease !important;
+  pointer-events: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  max-width: 300px !important;
+  white-space: normal !important;
+  line-height: 1.4 !important;
+}
+
+.keyword-tooltip::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 100% !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  border: 8px solid transparent !important;
+  border-top-color: #1f2937 !important;
+}
+
+.keyword-annotation:hover .keyword-tooltip {
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(-5px) !important;
+}
+
+/* 标记徽章样式 */
+.keyword-badge {
+  position: absolute !important;
+  top: -10px !important;
+  right: -10px !important;
+  background: #ef4444 !important;
+  color: white !important;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+  font-weight: bold !important;
+  z-index: 10001 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  border: 2px solid white !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.keyword-badge-warning {
+  background: #f59e0b !important;
+}
+
+.keyword-badge-info {
+  background: #3b82f6 !important;
+}
+
+/* 确保标注内容可见 */
+.keyword-annotation * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* 特殊元素类型的标注调整 */
+.keyword-annotation img {
+  border-radius: 4px !important;
+}
+
+.keyword-annotation a {
+  text-decoration: underline !important;
+  text-decoration-color: currentColor !important;
+}
+
+.keyword-annotation input,
+.keyword-annotation textarea,
+.keyword-annotation select {
+  border-radius: 4px !important;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .keyword-tooltip {
+    font-size: 11px !important;
+    padding: 8px 12px !important;
+    max-width: 250px !important;
+  }
+
+  .keyword-badge {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 10px !important;
+  }
+}
+
+/* 打印时隐藏标注 */
+@media print {
+  .keyword-annotation,
+  .keyword-tooltip,
+  .keyword-badge {
+    display: none !important;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .keyword-tooltip {
+    background: #374151 !important;
+    border: 1px solid #4b5563 !important;
+  }
+
+  .keyword-tooltip::after {
+    border-top-color: #374151 !important;
+  }
+}
+
+/* 确保标注不影响页面布局 */
+.keyword-annotation {
+  box-sizing: border-box !important;
+}
+
+/* 防止标注被其他样式覆盖 */
+.keyword-annotation,
+.keyword-annotation-warning,
+.keyword-annotation-info {
+  position: relative !important;
+  z-index: 999 !important;
+}
+
+.keyword-tooltip,
+.keyword-badge {
+  position: absolute !important;
+  z-index: 10000 !important;
+}

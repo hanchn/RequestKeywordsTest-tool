@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Web Accessibility Tester",
+  "version": "2.0.0",
+  "description": "专注于网页无障碍检测和可视化标注的Chrome插件",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "content/detector.js",
+        "content/annotator.js",
+        "content/content.js"
+      ],
+      "css": ["content/annotations.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Web Accessibility Tester",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  }
+}
