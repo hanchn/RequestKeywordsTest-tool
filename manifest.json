@@ -5,7 +5,10 @@
   "description": "专注于网页无障碍检测和可视化标注的Chrome插件",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
   ],
   "content_scripts": [
     {
@@ -13,10 +16,11 @@
       "js": [
         "content/detector.js",
         "content/annotator.js",
+        "content/network-monitor.js",
         "content/content.js"
       ],
       "css": ["content/annotations.css"],
-      "run_at": "document_end"
+      "run_at": "document_start"
     }
   ],
   "action": {

@@ -308,3 +308,26 @@ const contentScriptManager = new ContentScriptManager();
 window.contentScriptManager = contentScriptManager;
 
 console.log('🎯 关键词检测内容脚本已加载');
+
+class ContentScript {
+    constructor() {
+        this.detector = null;
+        this.annotator = null;
+        this.networkMonitor = null;
+        this.init();
+    }
+
+    init() {
+        this.detector = new KeywordDetector();
+        this.annotator = new PageAnnotator();
+        this.networkMonitor = new NetworkMonitor(this.detector);
+        this.setupMessageListener();
+        this.startNetworkMonitoring();
+    }
+
+    startNetworkMonitoring() {
+        if (this.networkMonitor) {
+            this.networkMonitor.start();
+        }
+    }
+}
