@@ -1,78 +1,34 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>地址合规检测工具</title>
+    <meta charset="utf-8" />
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <div class="popup-container">
-      <!-- 标题区域 -->
       <div class="popup-header">
-        <div class="header-content">
-          <div class="logo-section">
-            <div class="logo-icon">🔍</div>
-            <h1>地址合规检测</h1>
-          </div>
-        </div>
+        <h2>关键词检测工具</h2>
       </div>
 
-      <!-- 主内容区域 -->
-      <div class="popup-main">
-        <!-- 关键词输入区域 -->
-        <div class="keywords-panel">
-          <div class="input-section">
-            <label for="keywordsInput" class="input-label">检测关键词</label>
-            <textarea
-              id="keywordsInput"
-              class="keywords-textarea"
-              placeholder="请输入需要检测的关键词，多个关键词用英文逗号分隔\n例如：违法,欺诈,虚假,非法"
-              rows="3"
-            ></textarea>
-            <div class="input-actions">
-              <button id="saveKeywords" class="btn btn-primary">
-                保存关键词
-              </button>
-            </div>
-          </div>
+      <div class="content">
+        <div class="input-section">
+          <label for="keywordsInput">检测关键词（用逗号分隔）：</label>
+          <textarea
+            id="keywordsInput"
+            placeholder="请输入要检测的关键词，用逗号分隔\n例如：shopify,paypal,stripe"
+          ></textarea>
         </div>
 
-        <!-- 控制面板 -->
-        <div class="controls-panel">
-          <div class="switch-container">
-            <label class="switch">
-              <input type="checkbox" id="annotationToggle" checked />
-              <span class="slider"></span>
-            </label>
-            <span class="switch-label">显示标注</span>
+        <div class="status-section">
+          <div id="statusText" class="status-text">请输入关键词</div>
+          <div id="resultCount" class="result-count">0</div>
+          <div
+            id="loadingSpinner"
+            class="loading-spinner"
+            style="display: none"
+          >
+            检测中...
           </div>
-          <div class="detection-status">
-            <span id="statusText" class="status-text">就绪</span>
-            <span id="resultCount" class="result-count"></span>
-          </div>
-        </div>
-
-        <!-- 加载状态 -->
-        <div class="loading" id="loadingIndicator">
-          <div class="spinner"></div>
-          <span>正在检测...</span>
-        </div>
-
-        <!-- 检测结果摘要 -->
-        <div class="results-summary" id="resultsSummary" style="display: none">
-          <h3>检测结果</h3>
-          <div class="summary-stats">
-            <div class="stat-item">
-              <span class="stat-label">发现问题：</span>
-              <span class="stat-value" id="issueCount">0</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">匹配关键词：</span>
-              <span class="stat-value" id="keywordMatches">0</span>
-            </div>
-          </div>
-          <button id="viewConsole" class="btn btn-link">查看控制台详情</button>
         </div>
       </div>
     </div>
