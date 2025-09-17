@@ -90,7 +90,7 @@ class KeywordDetector {
         }
     }
 
-    // Add the missing shouldSkipAttribute method
+    // 修改shouldSkipAttribute方法以检测所有地址相关属性
     shouldSkipAttribute(attrName) {
         const skipAttributes = [
             'style', 'class', 'id', 'data-reactid', 'data-react-checksum',
@@ -100,11 +100,37 @@ class KeywordDetector {
             'xmlns', 'xml:lang', 'xml:space'
         ];
         
+        // 地址相关的属性，这些都需要检测
+        const urlAttributes = [
+            'href', 'src', 'action', 'formaction', 'data-url', 'data-link',
+            'data-href', 'data-src', 'data-action', 'poster', 'cite',
+            'longdesc', 'usemap', 'manifest', 'ping', 'background',
+            'codebase', 'archive', 'classid', 'data', 'profile'
+        ];
+        
+        // 如果是地址相关属性，不跳过（需要检测）
+        if (urlAttributes.includes(attrName.toLowerCase())) {
+            return false;
+        }
+        
+        // 如果属性名包含url、link、href等关键词，不跳过
+        const attrLower = attrName.toLowerCase();
+        if (attrLower.includes('url') || attrLower.includes('link') || 
+            attrLower.includes('href') || attrLower.includes('src') ||
+            attrLower.includes('action') || attrLower.includes('endpoint')) {
+            return false;
+        }
+        
+        // 跳过常见的非地址属性
         if (skipAttributes.includes(attrName.toLowerCase())) {
             return true;
         }
         
-        if (attrName.startsWith('data-') && !attrName.includes('url') && !attrName.includes('link')) {
+        // 跳过大部分data-属性，但保留可能包含地址的
+        if (attrName.startsWith('data-') && 
+            !attrLower.includes('url') && !attrLower.includes('link') && 
+            !attrLower.includes('href') && !attrLower.includes('src') &&
+            !attrLower.includes('action') && !attrLower.includes('endpoint')) {
             return true;
         }
         
