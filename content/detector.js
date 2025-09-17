@@ -45,6 +45,35 @@ class KeywordDetector {
         }
     }
 
+    // 添加模糊匹配方法
+    fuzzyMatch(text, keyword) {
+        // 简单的编辑距离匹配
+        const textLower = text.toLowerCase();
+        const keywordLower = keyword.toLowerCase();
+        
+        // 精确匹配
+        if (textLower.includes(keywordLower)) {
+            return true;
+        }
+        
+        // 容错匹配：允许1个字符差异
+        if (Math.abs(textLower.length - keywordLower.length) <= 1) {
+            let differences = 0;
+            const maxLen = Math.max(textLower.length, keywordLower.length);
+            
+            for (let i = 0; i < maxLen; i++) {
+                if (textLower[i] !== keywordLower[i]) {
+                    differences++;
+                    if (differences > 1) return false;
+                }
+            }
+            return differences <= 1;
+        }
+        
+        return false;
+    }
+
+    // 修改检测逻辑使用模糊匹配
     async detectInAllAttributes() {
         const allElements = document.querySelectorAll('*');
         let foundCount = 0;
@@ -52,6 +81,11 @@ class KeywordDetector {
         for (const element of allElements) {
             if (element.attributes) {
                 for (const attr of element.attributes) {
+                    if (typeof this.shouldSkipAttribute !== 'function') {
+                        console.error('shouldSkipAttribute 方法未定义，跳过属性检测');
+                        return foundCount;
+                    }
+                    
                     if (this.shouldSkipAttribute(attr.name)) {
                         continue;
                     }
@@ -60,7 +94,8 @@ class KeywordDetector {
     
                     if (element.tagName === 'LINK' && attr.name === 'href') {
                         for (const keyword of this.keywords) {
-                            if (attrValue.includes(keyword.toLowerCase())) {
+                            // 使用模糊匹配
+                            if (this.fuzzyMatch(attrValue, keyword)) {
                                 this.addDetectionResult({
                                     type: 'link_href',
                                     keyword: keyword,
@@ -73,7 +108,8 @@ class KeywordDetector {
                         }
                     } else {
                         for (const keyword of this.keywords) {
-                            if (attrValue.includes(keyword.toLowerCase())) {
+                            // 使用模糊匹配
+                            if (this.fuzzyMatch(attrValue, keyword)) {
                                 this.addDetectionResult({
                                     type: 'attribute',
                                     keyword: keyword,
@@ -88,6 +124,8 @@ class KeywordDetector {
                 }
             }
         }
+    
+        return foundCount;
     }
 
     // 修改shouldSkipAttribute方法以检测所有地址相关属性

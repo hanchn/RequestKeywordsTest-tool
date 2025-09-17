@@ -3,7 +3,19 @@
  */
 class ContentScriptManager {
     constructor() {
-        this.detector = new KeywordDetector();
+        // 添加检查确保 KeywordDetector 类存在
+        if (typeof KeywordDetector === 'undefined') {
+            console.error('KeywordDetector 类未定义，请检查脚本加载顺序');
+            return;
+        }
+        
+        try {
+            this.detector = new KeywordDetector();
+        } catch (error) {
+            console.error('创建 KeywordDetector 实例失败:', error);
+            return;
+        }
+        
         this.isInitialized = false;
         this.currentResults = [];
         
