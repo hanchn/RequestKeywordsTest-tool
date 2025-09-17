@@ -7,21 +7,32 @@
   <body>
     <div class="popup-container">
       <div class="popup-header">
-        <h2>关键词检测工具</h2>
+        <div class="header-content">
+          <div class="logo-section">
+            <div class="logo-icon">🔍</div>
+            <h1>关键词检测工具</h1>
+          </div>
+        </div>
       </div>
 
-      <div class="content">
-        <div class="input-section">
-          <label for="keywordsInput">检测关键词（用逗号分隔）：</label>
-          <textarea
-            id="keywordsInput"
-            placeholder="请输入要检测的关键词，用逗号分隔\n例如：shopify,paypal,stripe"
-          ></textarea>
-        </div>
+      <div class="popup-main">
+        <div class="keywords-panel">
+          <div class="input-section">
+            <label class="input-label" for="keywordsInput"
+              >检测关键词（用逗号分隔）：</label
+            >
+            <textarea
+              id="keywordsInput"
+              class="keywords-textarea"
+              placeholder="请输入要检测的关键词，用逗号分隔\n例如：shopify,paypal,stripe"
+            ></textarea>
+          </div>
 
-        <div class="status-section">
-          <div id="statusText" class="status-text">请输入关键词</div>
-          <div id="resultCount" class="result-count">0</div>
+          <div class="detection-status">
+            <div id="statusText" class="status-text">请输入关键词</div>
+            <div id="resultCount" class="result-count">0</div>
+          </div>
+
           <div
             id="loadingSpinner"
             class="loading-spinner"

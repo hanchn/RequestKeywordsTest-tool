@@ -12,8 +12,6 @@ class ContentScriptManager {
 
     async init() {
         try {
-            console.log('🚀 内容脚本初始化开始');
-            
             if (document.readyState === 'loading') {
                 await new Promise(resolve => {
                     document.addEventListener('DOMContentLoaded', resolve);
@@ -30,17 +28,14 @@ class ContentScriptManager {
             await this.loadKeywordsFromStorage();
             
             this.isInitialized = true;
-            console.log('✅ 内容脚本初始化完成');
             
         } catch (error) {
-            console.error('❌ 内容脚本初始化失败:', error);
+            console.error('初始化失败:', error);
         }
     }
 
     setupMessageListener() {
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            console.log('📨 收到消息:', message.action);
-            
             switch (message.action) {
                 case 'startScan':
                     this.handleStartScan(message, sendResponse);
@@ -53,9 +48,6 @@ class ContentScriptManager {
                 case 'getResults':
                     this.handleGetResults(message, sendResponse);
                     break;
-                    
-                default:
-                    sendResponse({ success: false, error: 'Unknown action' });
             }
             
             return true;
@@ -64,72 +56,43 @@ class ContentScriptManager {
 
     async handleStartScan(message, sendResponse) {
         try {
-            console.log('🔍 开始执行扫描...');
-            
             if (!this.isInitialized) {
-                throw new Error('内容脚本未完全初始化');
-            }
-            
-            if (this.detector.keywords.length === 0) {
-                sendResponse({
-                    success: true,
-                    results: [],
-                    message: '没有设置关键词'
-                });
+                sendResponse({ success: false, error: '内容脚本未初始化' });
                 return;
             }
-            
+
             const results = await this.detector.detectKeywords();
             this.currentResults = results;
             
             await this.saveResultsToStorage(results);
             
-            const response = {
-                success: true,
-                results: results,
-                statistics: this.detector.getStatistics(),
-                url: window.location.href,
-                timestamp: new Date().toISOString()
-            };
-            
+            // 只输出最终统计
             if (results.length > 0) {
-                console.log(`🚨 发现 ${results.length} 个问题:`, results);
-            } else {
-                console.log('✅ 未发现问题');
+                console.log(`发现 ${results.length} 个问题`);
             }
             
-            sendResponse(response);
+            sendResponse({ 
+                success: true, 
+                results: results,
+                count: results.length
+            });
             
         } catch (error) {
-            console.error('❌ 扫描失败:', error);
-            sendResponse({
-                success: false,
-                error: error.message,
-                results: []
-            });
+            console.error('扫描失败:', error);
+            sendResponse({ success: false, error: error.message });
         }
     }
 
     async handleSetKeywords(message, sendResponse) {
         try {
             const keywords = message.keywords || [];
-            console.log('🎯 设置关键词:', keywords);
-            
             this.detector.setKeywords(keywords);
             await this.saveKeywordsToStorage(keywords);
             
-            sendResponse({ 
-                success: true, 
-                keywords: keywords,
-                count: keywords.length
-            });
-            
+            sendResponse({ success: true });
         } catch (error) {
-            console.error('❌ 设置关键词失败:', error);
-            sendResponse({
-                success: false,
-                error: error.message
-            });
+            console.error('设置关键词失败:', error);
+            sendResponse({ success: false, error: error.message });
         }
     }
 
@@ -195,5 +158,3 @@ class ContentScriptManager {
 
 const contentScriptManager = new ContentScriptManager();
 window.contentScriptManager = contentScriptManager;
-
-console.log('🎯 关键词检测内容脚本已加载');

@@ -14,140 +14,110 @@ class KeywordDetector {
      */
     setKeywords(keywords) {
         this.keywords = keywords.filter(keyword => keyword.trim().length > 0);
-        console.log('🎯 设置检测关键词:', this.keywords);
     }
 
-    // 在 detectKeywords 方法开始处添加更多调试信息
     async detectKeywords() {
         if (this.isDetecting) {
-            console.log('⚠️ 检测正在进行中，返回现有结果');
             return this.detectionResults;
         }
     
         if (this.keywords.length === 0) {
-            console.log('⚠️ 没有设置关键词，跳过检测');
             return [];
         }
     
-        console.log('🔍 开始关键词检测...');
-        console.log('🎯 检测关键词:', this.keywords);
-        console.log('📄 当前页面URL:', window.location.href);
-        console.log('📊 页面状态:', document.readyState);
-        
         this.isDetecting = true;
-        this.detectionResults = [];
+        this.clearResults();
     
         try {
-            // 检测页面文本内容
             await this.detectInTextContent();
-            
-            // 检测所有元素属性（包括link标签的href）
             await this.detectInAllAttributes();
-            
-            // 检测图片alt属性
             await this.detectInImages();
-            
-            // 检测表单元素
             await this.detectInForms();
-            
-            // 输出检测结果
-            this.logDetectionResults();
-            
+    
+            this.logFinalResults();
+    
             return this.detectionResults;
-            
         } catch (error) {
-            console.error('❌ 检测过程中发生错误:', error);
-            throw error;
+            console.error('检测失败:', error);
+            return [];
         } finally {
             this.isDetecting = false;
         }
     }
 
-    /**
-     * 检测所有元素的所有属性
-     */
     async detectInAllAttributes() {
-        console.log('🔍 开始检测所有元素属性...');
         const allElements = document.querySelectorAll('*');
-        console.log(`📊 总共找到 ${allElements.length} 个元素`);
-        
-        let attributeCount = 0;
         let foundCount = 0;
-        
-        allElements.forEach(element => {
-            const attributes = element.attributes;
-            
-            for (let i = 0; i < attributes.length; i++) {
-                const attr = attributes[i];
-                const attrName = attr.name;
-                const attrValue = attr.value;
-                attributeCount++;
-                
-                // 跳过一些不需要检测的属性
-                if (this.shouldSkipAttribute(attrName)) {
-                    continue;
-                }
-                
-                // 特别关注link标签的href属性
-                if (element.tagName.toLowerCase() === 'link' && attrName === 'href') {
-                    console.log(`🔗 检查link标签: ${attrValue}`);
-                }
-                
-                this.keywords.forEach(keyword => {
-                    if (attrValue && attrValue.toLowerCase().includes(keyword.toLowerCase())) {
-                        foundCount++;
-                        console.log(`✅ 在属性中发现关键词: ${keyword} -> ${element.tagName}[${attrName}="${attrValue}"]`);
-                        
-                        this.addDetectionResult({
-                            type: 'attribute',
-                            keyword: keyword,
-                            element: element,
-                            content: `${element.tagName.toLowerCase()}[${attrName}="${attrValue}"]`,
-                            location: this.getElementLocation(element),
-                            attributeName: attrName,
-                            attributeValue: attrValue
-                        });
+    
+        for (const element of allElements) {
+            if (element.attributes) {
+                for (const attr of element.attributes) {
+                    if (this.shouldSkipAttribute(attr.name)) {
+                        continue;
                     }
-                });
+    
+                    const attrValue = attr.value.toLowerCase();
+    
+                    if (element.tagName === 'LINK' && attr.name === 'href') {
+                        for (const keyword of this.keywords) {
+                            if (attrValue.includes(keyword.toLowerCase())) {
+                                this.addDetectionResult({
+                                    type: 'link_href',
+                                    keyword: keyword,
+                                    element: element,
+                                    content: attrValue,
+                                    location: this.getElementLocation(element)
+                                });
+                                foundCount++;
+                            }
+                        }
+                    } else {
+                        for (const keyword of this.keywords) {
+                            if (attrValue.includes(keyword.toLowerCase())) {
+                                this.addDetectionResult({
+                                    type: 'attribute',
+                                    keyword: keyword,
+                                    element: element,
+                                    content: `${attr.name}="${attrValue}"`,
+                                    location: this.getElementLocation(element)
+                                });
+                                foundCount++;
+                            }
+                        }
+                    }
+                }
             }
-        });
-        
-        console.log(`📊 检查了 ${attributeCount} 个属性，发现 ${foundCount} 个匹配`);
+        }
     }
 
-    /**
-     * 判断是否应该跳过某个属性的检测
-     */
+    // Add the missing shouldSkipAttribute method
     shouldSkipAttribute(attrName) {
         const skipAttributes = [
-            'style', 'class', 'id', 
-            'role', 'tabindex', 'contenteditable',
-            'draggable', 'hidden', 'lang', 'dir', 'translate'
+            'style', 'class', 'id', 'data-reactid', 'data-react-checksum',
+            'data-reactroot', 'data-testid', 'aria-label', 'aria-describedby',
+            'aria-hidden', 'tabindex', 'role', 'autocomplete', 'spellcheck',
+            'contenteditable', 'draggable', 'translate', 'dir', 'lang',
+            'xmlns', 'xml:lang', 'xml:space'
         ];
         
-        // 检查是否在跳过列表中
-        if (skipAttributes.includes(attrName)) {
+        if (skipAttributes.includes(attrName.toLowerCase())) {
             return true;
         }
         
-        // 检查通配符匹配
-        if (attrName.startsWith('data-') || attrName.startsWith('aria-')) {
+        if (attrName.startsWith('data-') && !attrName.includes('url') && !attrName.includes('link')) {
             return true;
         }
         
         return false;
     }
 
-    /**
-     * 检测页面文本内容
-     */
     async detectInTextContent() {
         const textNodes = this.getAllTextNodes();
         
         textNodes.forEach(node => {
             const text = node.textContent.trim();
             if (text.length === 0) return;
-
+            
             this.keywords.forEach(keyword => {
                 if (text.toLowerCase().includes(keyword.toLowerCase())) {
                     this.addDetectionResult({
@@ -215,10 +185,12 @@ class KeywordDetector {
             NodeFilter.SHOW_TEXT,
             {
                 acceptNode: function(node) {
-                    if (node.nodeValue.trim().length > 0) {
-                        return NodeFilter.FILTER_ACCEPT;
+                    if (node.parentElement.tagName === 'SCRIPT' || 
+                        node.parentElement.tagName === 'STYLE' ||
+                        node.parentElement.tagName === 'NOSCRIPT') {
+                        return NodeFilter.FILTER_REJECT;
                     }
-                    return NodeFilter.FILTER_REJECT;
+                    return NodeFilter.FILTER_ACCEPT;
                 }
             }
         );
@@ -232,20 +204,12 @@ class KeywordDetector {
     }
 
     addDetectionResult(result) {
-        // 避免重复添加相同的结果
-        const exists = this.detectionResults.some(existing => 
-            existing.keyword === result.keyword && 
-            existing.content === result.content &&
-            existing.type === result.type
-        );
+        result.timestamp = new Date().toISOString();
+        result.url = window.location.href;
+        result.selector = this.generateCSSSelector(result.element);
+        result.xpath = this.generateXPath(result.element);
         
-        if (!exists) {
-            this.detectionResults.push({
-                ...result,
-                id: Date.now() + Math.random(),
-                timestamp: new Date().toISOString()
-            });
-        }
+        this.detectionResults.push(result);
     }
 
     getElementLocation(element) {
@@ -256,9 +220,7 @@ class KeywordDetector {
             x: rect.left + window.scrollX,
             y: rect.top + window.scrollY,
             width: rect.width,
-            height: rect.height,
-            selector: this.generateCSSSelector(element),
-            xpath: this.generateXPath(element)
+            height: rect.height
         };
     }
 
@@ -284,42 +246,52 @@ class KeywordDetector {
     generateXPath(element) {
         if (!element) return '';
         
-        const parts = [];
+        if (element.id) {
+            return `//*[@id="${element.id}"]`;
+        }
         
-        while (element && element.nodeType === Node.ELEMENT_NODE) {
-            let index = 0;
-            let sibling = element.previousSibling;
+        const parts = [];
+        let current = element;
+        
+        while (current && current.nodeType === Node.ELEMENT_NODE) {
+            let index = 1;
+            let sibling = current.previousElementSibling;
             
             while (sibling) {
-                if (sibling.nodeType === Node.ELEMENT_NODE && sibling.tagName === element.tagName) {
+                if (sibling.tagName === current.tagName) {
                     index++;
                 }
-                sibling = sibling.previousSibling;
+                sibling = sibling.previousElementSibling;
             }
             
-            const tagName = element.tagName.toLowerCase();
-            const pathIndex = index > 0 ? `[${index + 1}]` : '';
-            parts.unshift(`${tagName}${pathIndex}`);
+            const tagName = current.tagName.toLowerCase();
+            const part = index > 1 ? `${tagName}[${index}]` : tagName;
+            parts.unshift(part);
             
-            element = element.parentNode;
+            current = current.parentElement;
         }
         
-        return parts.length ? '/' + parts.join('/') : '';
+        return '/' + parts.join('/');
     }
 
-    logDetectionResults() {
-        if (this.detectionResults.length === 0) {
-            return;
+    // 简化的日志输出方法
+    logFinalResults() {
+        const totalChecked = document.querySelectorAll('*').length;
+        const errorCount = this.detectionResults.length;
+        
+        if (errorCount > 0) {
+            console.log(`🚨 检测结果: ${errorCount}/${totalChecked}`);
+            console.log('错误列表:');
+            this.detectionResults.forEach((result, index) => {
+                console.log(`${index + 1}. "${result.keyword}" - ${result.content}`);
+            });
+        } else {
+            console.log(`✅ 检测完成: 0/${totalChecked} - 未发现问题`);
         }
-
-        console.log(`🚨 发现 ${this.detectionResults.length} 个问题:`);
-        this.detectionResults.forEach((result, index) => {
-            console.log(`${index + 1}. "${result.keyword}" - ${result.content}`);
-        });
     }
 
     getTypeDisplayName(type) {
-        const typeMap = {
+        const typeNames = {
             'text': '文本内容',
             'attribute': '元素属性',
             'image': '图片属性',
